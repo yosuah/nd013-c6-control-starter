@@ -10,6 +10,7 @@
 
 #include "utils.h"
 
+#include <cfloat>
 #include <cmath>
 
 namespace utils {
@@ -245,6 +246,52 @@ T clamp(const T& v, const T& lo, const T& hi) {
 double clampD(const double& v, const double& lo, const double& hi) {
   assert(!(hi < lo));
   return (v < lo) ? lo : (hi < v) ? hi : v;
+}
+  
+double get_steer_error(double current_x, double current_y, double current_yaw, double target_x, double target_y) {
+  carla::geom::Vector2D target_vec = carla::geom::Vector2D(target_x - current_x, target_y - current_y);
+  // curr_yaw points in the current movement direction, but we want to get a perpendicular 
+  // vector to that, so -sin and cos are used instead of cos and sin
+  carla::geom::Vector2D norm_of_lane = carla::geom::Vector2D(-std::sin(current_yaw), std::cos(current_yaw));
+  
+  double dot_prod = target_vec.x * norm_of_lane.x + target_vec.y * norm_of_lane.y;
+  
+  double target_vec_in_norm_direction = dot_prod / std::sqrt(std::pow(norm_of_lane.x, 2) + std::pow(norm_of_lane.y, 2));
+  
+  return -1 * target_vec_in_norm_direction;
+}
+  
+/*
+Using d = (v_f^2 - v_i^2) / (2 * a), compute the acceleration
+required for a given speed change on a given distance.
+
+Inputs: v_i - the initial speed in m/s.
+        v_f - the final speed in m/s.
+        d - the distance in m.
+        */
+
+double calc_acceleration(const double& v_i, const double& v_f, const double& d) {
+  double a{0.0};
+  if (std::abs(d) < DBL_EPSILON) {
+    a = std::numeric_limits<double>::infinity();
+  } else {
+    a = (std::pow(v_f, 2) - std::pow(v_i, 2)) / (2.0 * d);
+  }
+  return a;
+}
+  
+double get_throttle_error(double current_x, double current_y, double current_v, double target_x, double target_y, double target_v) {
+  double distance = std::sqrt(std::pow(target_x - current_x, 2) + std::pow(target_y - current_y, 2));
+  if (std::abs(distance) < DBL_EPSILON)
+    return 0.0;
+   
+  double acceleration = calc_acceleration(current_v, target_v, distance);
+  
+  std::cout << "Throttle req acceleration: " << acceleration << "m/s2 from (" << current_x << ", " << current_y << ") " << current_v << "m/s -> (" << target_x << ", " << target_y << ") " << target_v << "m/s" << std::endl;
+  
+  // return -1 * acceleration;
+  
+  return current_v - target_v;
 }
 
 }  // namespace utils

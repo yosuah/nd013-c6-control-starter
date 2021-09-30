@@ -16,29 +16,47 @@ PID::PID() {}
 PID::~PID() {}
 
 void PID::Init(double Kpi, double Kii, double Kdi, double output_lim_maxi, double output_lim_mini) {
-   /**
-   * TODO: Initialize PID coefficients (and errors, if needed)
-   **/
+  Kp = Kpi;
+  Ki = Kii;
+  Kd = Kdi;
+  output_lim_max = output_lim_maxi;
+  output_lim_min = output_lim_mini;
+  sum_cte = 0.0;
+  diff_cte = 0.0;
+  cte = 0.0;
+  is_first = true;
 }
 
 
-void PID::UpdateError(double cte) {
-   /**
-   * TODO: Update PID errors based on cte.
-   **/
+void PID::UpdateError(double cte_current) {
+  if (is_first) {
+    	diff_cte = 0;
+    	is_first = false;
+  } else {
+      if (std::abs(delta_time) < 0.0001)
+        diff_cte = 0;
+      else
+		diff_cte = (cte_current - cte) / delta_time;
+  }
+  sum_cte = sum_cte + cte_current * delta_time;
+  cte = cte_current;
 }
 
 double PID::TotalError() {
-   /**
-   * TODO: Calculate and return the total error
-    * The code should return a value in the interval [output_lim_mini, output_lim_maxi]
-   */
-    double control;
-    return control;
+  double control;
+  
+  // Calculate control output
+  control = -Kp * cte - Kd * diff_cte - Ki * sum_cte; // NOTE: error terms already include the time
+  
+  std::cout << "E: " << control << " P: " << -Kp * cte << " I: " << - Ki * sum_cte << " D: " << - Kd * diff_cte << std::endl;
+  
+  // Ensure output is in the desired range
+  control = max(control, output_lim_min);
+  control = min(control, output_lim_max);
+  
+  return control;
 }
 
-double PID::UpdateDeltaTime(double new_delta_time) {
-   /**
-   * TODO: Update the delta time with new value
-   */
+void PID::UpdateDeltaTime(double new_delta_time) {
+   delta_time = new_delta_time;
 }

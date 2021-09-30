@@ -184,8 +184,8 @@ void path_planner(vector<double>& x_points, vector<double>& y_points, vector<dou
 
 }
 
-void set_obst(vector<double> x_points, vector<double> y_points, vector<State>& obstacles, bool& obst_flag){
-
+void set_obst(vector<double> x_points, vector<double> y_points, vector<State>& obstacles, bool& obst_flag)
+{
 	for( int i = 0; i < x_points.size(); i++){
 		State obstacle;
 		obstacle.location.x = x_points[i];
@@ -195,9 +195,14 @@ void set_obst(vector<double> x_points, vector<double> y_points, vector<State>& o
 	obst_flag = true;
 }
 
-int main ()
+int main (int argc, char* argv[])
 {
-  cout << "starting server" << endl;
+  if (argc != 1 && argc != 7) {
+    std::cout << "incorrect number of arguments passed - either 0 or 6 are accepted" << std::endl;
+    return 1;
+  }
+  std::cout << "arguments: " << argv[1] << ", " << argv[2] << ", " << argv[3] << ", " << argv[4] << ", " << argv[5] << ", " << argv[6] << ", " << std::endl;
+  std::cout << "starting server" << std::endl;
   uWS::Hub h;
 
   double new_delta_time;
@@ -215,21 +220,42 @@ int main ()
   time(&prev_timer);
 
   // initialize pid steer
-  /**
-  * TODO (Step 1): create pid (pid_steer) for steer command and initialize values
-  **/
-
+  PID pid_steer = PID();
+  double steer_kp = 30.0;
+  double steer_ki = 0.0;
+  double steer_kd = 0.0;
+  if (argc >= 7) {
+    steer_kp = std::stod(argv[1]);
+    steer_ki = std::stod(argv[2]);
+  	steer_kd = std::stod(argv[3]);
+  }
+  pid_steer.Init(steer_kp, steer_ki, steer_kd, /*output_lim_max*/ 1.2, /*output_lim_min*/ -1.2);
 
   // initialize pid throttle
-  /**
-  * TODO (Step 1): create pid (pid_throttle) for throttle command and initialize values
-  **/
-
-  PID pid_steer = PID();
   PID pid_throttle = PID();
+  double throttle_kp = 0.02;
+  double throttle_ki = 0.0;
+  double throttle_kd = 0.0;
+  if (argc >= 7) {
+    throttle_kp = std::stod(argv[4]);
+    throttle_ki = std::stod(argv[5]);
+  	throttle_kd = std::stod(argv[6]);
+  }
+  pid_throttle.Init(throttle_kp, throttle_ki, throttle_kd, /*output_lim_max*/ 1, /*output_lim_min*/ -1);
+  
+  double cum_abs_steer_error = 0.0;
+  double cum_abs_throttle_error = 0.0;
+  double previous_x_position = 0.0;
+  double previous_y_position = 0.0;
+  double total_distance = 0.0;
+  bool is_first = true;
 
-  h.onMessage([&pid_steer, &pid_throttle, &new_delta_time, &timer, &prev_timer, &i, &prev_timer](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode)
+  h.onMessage([&pid_steer, &pid_throttle, &new_delta_time, &timer, &prev_timer, &i, 
+               &cum_abs_steer_error, &cum_abs_throttle_error, &previous_x_position, &previous_y_position,
+               &total_distance, &is_first, &argv](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t /*length*/, uWS::OpCode /*opCode*/)
   {
+    std::cout << "Message received in client" << std::endl;
+    
         auto s = hasData(data);
 
         if (s != "") {
@@ -257,6 +283,22 @@ int main ()
           double x_position = data["location_x"];
           double y_position = data["location_y"];
           double z_position = data["location_z"];
+          
+          // FIXME
+          x_points.resize(0);
+          y_points.resize(0);
+          v_points.resize(0);
+          x_points.push_back(x_position);
+          y_points.push_back(y_position);
+          v_points.push_back(velocity);
+          
+          if (is_first) {
+            is_first = false;
+          } else {
+            total_distance += std::sqrt(std::pow(x_position - previous_x_position, 2) + std::pow(y_position - previous_y_position, 2));
+          }
+          previous_x_position = x_position;
+          previous_y_position = y_position;
 
           if(!have_obst){
           	vector<double> x_obst = data["obst_x"];
@@ -285,88 +327,68 @@ int main ()
           // Steering control
           ////////////////////////////////////////
 
-          /**
-          * TODO (step 3): uncomment these lines
-          **/
-//           // Update the delta time with the previous command
-//           pid_steer.UpdateDeltaTime(new_delta_time);
+          // Update the delta time with the previous command
+          pid_steer.UpdateDeltaTime(new_delta_time);
 
           // Compute steer error
-          double error_steer;
+          // NOTE: the error is computed from the current state to the next state (and not to the final state),
+          // because we want to control the current change and leave long term planning to the behavior planner
+          double error_steer = utils::get_steer_error(x_points[0], y_points[0], yaw, x_points[1], y_points[1]);
+          pid_steer.UpdateError(error_steer);    
+          cum_abs_steer_error += std::abs(error_steer);
+          double steer_output = pid_steer.TotalError();
+                    
+          steer_output = 0; // FIXME
 
-
-          double steer_output;
-
-          /**
-          * TODO (step 3): compute the steer error (error_steer) from the position and the desired trajectory
-          **/
-//           error_steer = 0;
-
-          /**
-          * TODO (step 3): uncomment these lines
-          **/
-//           // Compute control to apply
-//           pid_steer.UpdateError(error_steer);
-//           steer_output = pid_steer.TotalError();
-
-//           // Save data
-//           file_steer.seekg(std::ios::beg);
-//           for(int j=0; j < i - 1; ++j) {
-//               file_steer.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-//           }
-//           file_steer  << i ;
-//           file_steer  << " " << error_steer;
-//           file_steer  << " " << steer_output << endl;
+          // Save data
+          file_steer.seekg(std::ios::beg);
+          for(int j=0; j < i - 1; ++j) {
+              file_steer.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+          }
+          file_steer  << i ;
+          file_steer  << " " << error_steer;
+          file_steer  << " " << steer_output << endl;
 
           ////////////////////////////////////////
           // Throttle control
           ////////////////////////////////////////
 
-          /**
-          * TODO (step 2): uncomment these lines
-          **/
-//           // Update the delta time with the previous command
-//           pid_throttle.UpdateDeltaTime(new_delta_time);
+          // Update the delta time with the previous command
+          pid_throttle.UpdateDeltaTime(new_delta_time);
 
           // Compute error of speed
-          double error_throttle;
-          /**
-          * TODO (step 2): compute the throttle error (error_throttle) from the position and the desired speed
-          **/
-          // modify the following line for step 2
-          error_throttle = 0;
-
-
-
-          double throttle_output;
+          double error_throttle = utils::get_throttle_error(x_points[0], y_points[0], /*v_points[0]*/ velocity, 
+                                                            x_points[x_points.size()-1], y_points[y_points.size()-1], v_points[v_points.size()-1]
+                                                            //x_points[2], y_points[2], v_points[2]
+                                                           );
+          // Compute control to apply
+          pid_throttle.UpdateError(error_throttle);
+          cum_abs_throttle_error += std::abs(error_throttle);
+          double throttle = pid_throttle.TotalError();
           double brake_output;
-
-          /**
-          * TODO (step 2): uncomment these lines
-          **/
-//           // Compute control to apply
-//           pid_throttle.UpdateError(error_throttle);
-//           double throttle = pid_throttle.TotalError();
-
-//           // Adapt the negative throttle to break
-//           if (throttle > 0.0) {
-//             throttle_output = throttle;
-//             brake_output = 0;
-//           } else {
-//             throttle_output = 0;
-//             brake_output = -throttle;
-//           }
-
-//           // Save data
-//           file_throttle.seekg(std::ios::beg);
-//           for(int j=0; j < i - 1; ++j){
-//               file_throttle.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-//           }
-//           file_throttle  << i ;
-//           file_throttle  << " " << error_throttle;
-//           file_throttle  << " " << brake_output;
-//           file_throttle  << " " << throttle_output << endl;
-
+		  double throttle_output;
+          
+          // Adapt the negative throttle to break
+          if (throttle > 0.0) {
+            throttle_output = throttle;
+            brake_output = 0;
+          } else {
+            throttle_output = 0;
+            brake_output = -throttle / 2;
+          }
+          
+          //throttle_output = 0.3;
+          //brake_output = 0;
+          
+          // Save data
+          file_throttle.seekg(std::ios::beg);
+          for(int j=0; j < i - 1; ++j){
+              file_throttle.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+          }
+          file_throttle  << i ;
+          file_throttle  << " " << error_throttle;
+          file_throttle  << " " << brake_output;
+          file_throttle  << " " << throttle_output << endl;
 
           // Send control
           json msgJson;
@@ -383,30 +405,51 @@ int main ()
           msgJson["spiral_idx"] = best_spirals;
           msgJson["active_maneuver"] = behavior_planner.get_active_maneuver();
 
-          //  min point threshold before doing the update
+          // min point threshold before doing the update
           // for high update rate use 19 for slow update rate use 4
-          msgJson["update_point_thresh"] = 16;
-
-          auto msg = msgJson.dump();
+          // NOTE: this setting was not respected due to a bug in simulatorAPI.py. I have fixed that.
+          msgJson["update_point_thresh"] = 19;
 
           i = i + 1;
           file_steer.close();
           file_throttle.close();
+          
+          // When reaching a fixed number of steps or a hard-coded time, end the simulation, so all of the executions
+          // are roughly comparable. This is useful for doing parameter optimization, as the code is executed many
+          // times in that case
+          if (i > 150 || sim_time > 40) {
+            fstream file_cumulated;
+			file_cumulated.open("cumulated_data.txt", std::ofstream::out | std::ofstream::app);
+            
+            // NOTE: The header is added by the external Python runner script, because this program is executed several times, but we only need one header
+            // file_cumulated  << "steer_kp, steer_ki, steer_kd, throttle_kp, throttle_ki, throttle_kd, steer_mae, throttle_mae" << std::endl;
+            file_cumulated  << argv[1] << "," << argv[2] << "," << argv[3] << "," << argv[4] << "," << argv[5] << "," << argv[6] << "," ;
+            file_cumulated  << cum_abs_steer_error / total_distance << ",";
+            file_cumulated  << cum_abs_throttle_error / total_distance << std::endl;
+            file_cumulated.close();
+            
+            std::cout << "Sending closing message at time " << sim_time << ", iteration " << i << std::endl;
+            msgJson["close"] = 1;
+            
+          }
+          
+          auto msg = msgJson.dump();
 
       ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+      std::cout << "Message sent to server" << std::endl;
 
     }
 
   });
 
 
-  h.onConnection([](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req)
+  h.onConnection([](uWS::WebSocket<uWS::SERVER> /*ws*/, uWS::HttpRequest /*req*/)
   {
       cout << "Connected!!!" << endl;
     });
 
 
-  h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER> ws, int code, char *message, size_t length)
+  h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER> ws, int /*code*/, char * /*message*/, size_t /*length*/)
     {
       ws.close();
       cout << "Disconnected" << endl;

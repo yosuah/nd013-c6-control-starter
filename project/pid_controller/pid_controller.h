@@ -17,18 +17,27 @@ public:
     /*
     * Errors
     */
+  	double cte;
+  	double diff_cte;
+  	double sum_cte;
 
     /*
     * Coefficients
     */
+  	double Kp;
+  	double Ki;
+  	double Kd;
 
     /*
     * Output limits
     */
+  	double output_lim_max;
+  	double output_lim_min;
   
     /*
     * Delta time
     */
+  	double delta_time;
 
     /*
     * Constructor
@@ -58,7 +67,13 @@ public:
     /*
     * Update the delta time.
     */
-    double UpdateDeltaTime(double new_delta_time);
+    void UpdateDeltaTime(double new_delta_time);
+  
+protected:
+	/*
+    * Store if this is the first iteration, as diff_cte is set to 0 in that case.
+    */
+	bool is_first;  
 };
 
 #endif //PID_CONTROLLER_H

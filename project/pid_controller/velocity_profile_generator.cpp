@@ -310,7 +310,7 @@ std::vector<TrajectoryPoint> VelocityProfileGenerator::nominal_trajectory(
     trajectory.push_back(traj_point);
 
     auto dist = utils::distance(spiral[i], spiral[i + 1]);
-    // This should never happen in a "nominal_trajjectory", but it's a sanity
+    // This should never happen in a "nominal_trajectory", but it's a sanity
     // check
     if (std::abs(desired_speed) < DBL_EPSILON) {
       time_step = 0.0;

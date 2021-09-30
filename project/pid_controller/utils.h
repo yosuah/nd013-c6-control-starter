@@ -54,5 +54,11 @@ template <class T>
 T clamp(const T& v, const T& lo, const T& hi);
 
 double clampD(const double& v, const double& lo, const double& hi);
+  
+double get_steer_error(double curr_x, double curr_y, double curr_yaw, double target_x, double target_y);
+  
+double calc_acceleration(const double& v_i, const double& v_f, const double& d);
+  
+double get_throttle_error(double current_x, double current_y, double current_v, double target_x, double target_y, double target_v);
 
 }  // namespace utils

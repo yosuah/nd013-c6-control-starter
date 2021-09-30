@@ -15,3 +15,5 @@ sudo ln -s /usr/lib64/libuWS.so /usr/lib/libuWS.so
 
 sudo apt-get update -y
 sudo apt-get install -y gnuplot
+
+pip3 install pandas

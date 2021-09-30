@@ -9,11 +9,12 @@ add_definitions(-std=c++14 -O3)
 set(CXX_FLAGS "-pthread -fPIC -DNDEBUG -Wall -Wextra")
 set(CMAKE_CXX_FLAGS "${CXX_FLAGS} -Wl,-Bstatic -lcarla_client -lrpc -lboost_filesystem -Wl,-Bdynamic")
 
-set(sources main.cpp behavior_planner_FSM.cpp motion_planner.cpp cubic_spiral.cpp spiral_base.cpp integral.cpp spiral_equations.cpp cost_functions.cpp utils.cpp velocity_profile_generator.cpp pid_controller.cpp)
+set(sources behavior_planner_FSM.cpp motion_planner.cpp cubic_spiral.cpp spiral_base.cpp integral.cpp spiral_equations.cpp cost_functions.cpp utils.cpp velocity_profile_generator.cpp pid_controller.cpp)
 
 set(CARLALIB_DIR ${CMAKE_SOURCE_DIR}/libcarla-install/lib)
 set(carla_libs  ${CARLALIB_DIR}/libboost_filesystem.a ${CARLALIB_DIR}/libboost_numpy36.a ${CARLALIB_DIR}/libboost_program_options.a ${CARLALIB_DIR}/libboost_python36.a ${CARLALIB_DIR}/libboost_system.a ${CARLALIB_DIR}/libcarla_client.a ${CARLALIB_DIR}/librpc.a ${CARLALIB_DIR}/libDebugUtils.a ${CARLALIB_DIR}/libDetour.a ${CARLALIB_DIR}/libDetourCrowd.a ${CARLALIB_DIR}/libDetourTileCache.a ${CARLALIB_DIR}/libRecast.a)
 set(gtest_lib /usr/src/gtest/libgtest.a)
+set(gtest_main /usr/src/gtest/libgtest_main.a)
 
 include_directories(/usr/local/include)
 link_directories(/usr/local/lib)
@@ -43,6 +44,26 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
-add_executable(pid_controller ${sources} )
+add_library(pid_controller_lib STATIC ${sources} )
 
-target_link_libraries(pid_controller z ssl uv uWS ${carla_libs} ${gtest_lib} glog boost_filesystem lapack)
+target_link_libraries(pid_controller_lib PUBLIC z ssl uv uWS ${carla_libs} ${gtest_lib} glog boost_filesystem lapack)
+
+add_executable(pid_controller main.cpp )
+
+target_link_libraries(pid_controller pid_controller_lib)
+
+enable_testing()
+
+add_executable(
+        pid_controller_test
+        test_pid_controller.cpp
+        test_utils.cpp
+)
+target_link_libraries(
+        pid_controller_test
+        pid_controller_lib
+        ${gtest_main}
+)
+
+include(GoogleTest)
+gtest_add_tests(TARGET pid_controller_test)
