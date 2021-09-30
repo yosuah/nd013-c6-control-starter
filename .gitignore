@@ -1,2 +1,8 @@
 .DS_Store
 .idea
+.*/CMakeFiles
+CMakeFiles
+CMakeCache.txt
+*.a
+*.cmake
+Makefile
