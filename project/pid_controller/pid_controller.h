@@ -62,7 +62,7 @@ public:
     /*
     * Calculate the total PID error.
     */
-    double TotalError();
+    double TotalError(bool debug=false);
   
     /*
     * Update the delta time.

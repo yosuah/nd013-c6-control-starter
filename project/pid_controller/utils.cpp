@@ -254,6 +254,8 @@ double get_steer_error(double current_x, double current_y, double current_yaw, d
   // vector to that, so -sin and cos are used instead of cos and sin
   carla::geom::Vector2D norm_of_lane = carla::geom::Vector2D(-std::sin(current_yaw), std::cos(current_yaw));
   
+  // std::cout << "Target vec " << target_vec.x << " " << target_vec.y << "; norm of direction: " << norm_of_lane.x << " " << norm_of_lane.y << "; yaw: " << current_yaw << std::endl;
+  
   double dot_prod = target_vec.x * norm_of_lane.x + target_vec.y * norm_of_lane.y;
   
   double target_vec_in_norm_direction = dot_prod / std::sqrt(std::pow(norm_of_lane.x, 2) + std::pow(norm_of_lane.y, 2));
@@ -289,9 +291,9 @@ double get_throttle_error(double current_x, double current_y, double current_v, 
   
   std::cout << "Throttle req acceleration: " << acceleration << "m/s2 from (" << current_x << ", " << current_y << ") " << current_v << "m/s -> (" << target_x << ", " << target_y << ") " << target_v << "m/s" << std::endl;
   
-  // return -1 * acceleration;
+  return -1 * acceleration;
   
-  return current_v - target_v;
+  // return current_v - target_v;
 }
 
 }  // namespace utils

@@ -142,6 +142,7 @@ std::vector<int> MotionPlanner::get_best_spiral_idx(
   for (size_t i = 0; i < spirals.size(); ++i) {
     double cost = calculate_cost(spirals[i], obstacles, goal_state);
 
+    // LOG(INFO) << "Cost: " << cost;
     if (cost < best_cost) {
       best_cost = cost;
       best_spiral_idx = i;

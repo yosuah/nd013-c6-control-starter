@@ -36,19 +36,21 @@ void PID::UpdateError(double cte_current) {
       if (std::abs(delta_time) < 0.0001)
         diff_cte = 0;
       else
-		diff_cte = (cte_current - cte) / delta_time;
+		diff_cte = (cte_current - cte) / delta_time * 0.7 + 0.3 * diff_cte;
   }
   sum_cte = sum_cte + cte_current * delta_time;
   cte = cte_current;
 }
 
-double PID::TotalError() {
+double PID::TotalError(bool debug) {
   double control;
   
   // Calculate control output
   control = -Kp * cte - Kd * diff_cte - Ki * sum_cte; // NOTE: error terms already include the time
   
-  std::cout << "E: " << control << " P: " << -Kp * cte << " I: " << - Ki * sum_cte << " D: " << - Kd * diff_cte << std::endl;
+  if (debug) {
+  	std::cout << "Cte " << cte << " Control: " << control << " P: " << -Kp * cte << " I: " << - Ki * sum_cte << " D: " << - Kd * diff_cte << " T: " << delta_time << std::endl;
+  }
   
   // Ensure output is in the desired range
   control = max(control, output_lim_min);

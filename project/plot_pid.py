@@ -13,6 +13,7 @@ def read_throttle_data():
  throttle_file = 'throttle_pid_data.txt'
  throttle_df = pd.read_csv(throttle_file, delim_whitespace = True, header = None, usecols = [0, 1, 2, 3])
  throttle_df.columns = ['Iteration', 'Error Throttle', 'Brake Output', 'Throttle Output']
+ throttle_df['Brake Output'] *= -1 # show braking as negative to make it easier to read the plots
  print(f'Throttle data:\n{throttle_df.head()}\n')
  return throttle_df
 
@@ -20,13 +21,15 @@ def read_throttle_data():
 def plot_steer_data(steer_df, n_rows):   
  steer_df2 = steer_df[:n_rows]
  steer_df2.plot(x = steer_df.columns[0], y = [steer_df.columns[1], steer_df.columns[2]], kind = 'line')
- plt.show()
+ #plt.show()
+ plt.savefig("steer_data.png")
  
     
 def plot_throttle_data(throttle_df, n_rows):   
  throttle_df2 = throttle_df[:n_rows]
  throttle_df2.plot(x = throttle_df.columns[0], y = [throttle_df.columns[1], throttle_df.columns[2], throttle_df.columns[3]], kind = 'line')
- plt.show()
+ plt.savefig("throttle_data.png")
+ #plt.show()
  
     
 def main():
