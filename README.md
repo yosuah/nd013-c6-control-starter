@@ -11,9 +11,10 @@ simulated vehicle in Carla follows the requested trajectory and avoids the obsta
 
 A PID controller is implemented and integrated into the provided framework for 
 throttle and steering control. Several fixes are added to the framework and simulation
-client to make the control smooth(er) and more stable. The twiddle gradient-free optimization method is used for tuning the controller parameters 
+client to make the control smooth(er) and more stable. The twiddle optimization method is used for tuning the controller parameters 
 in multiple successive stages. Finally a short evaluation is provided of the controllers.
 
+Video running at 2x the original simulation speed.
 ![Video of final controller scene](videos/control_success_small.gif)
 
 See the [video in higher quality](videos/control_success_small.mp4). Or check out
