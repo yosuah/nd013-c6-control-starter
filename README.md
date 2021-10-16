@@ -15,11 +15,14 @@ client to make the control smooth(er) and more stable. The twiddle optimization 
 in multiple successive stages. Finally a short evaluation is provided of the controllers.
 
 Video running at 2x the original simulation speed.
+
 ![Video of final controller scene](videos/control_success_small.gif)
 
 See the [video in higher quality](videos/control_success_small.mp4). Or check out
 another 
 [video of what it was like when things did not really work as expected](videos/control_fail_small.mp4) .
+
+In order to see all changes I made compare it to the [last commit of the framework](https://github.com/yosuah/nd013-c6-control-starter/compare/78a74704cc25fcbe92e188eb0f3204832f8febd5...HEAD). All NOTE comments are by me (but TODO comments were already in the code).
 
 # Running
 
