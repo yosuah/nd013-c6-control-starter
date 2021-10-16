@@ -123,16 +123,16 @@ a constant reference speed of 3m/s. It can be seen that it takes a long time to 
 the desired speed (the controller is damped) and even despite this, some oscillation is
 clearly visible. The osciallation is reduced, but not removed by the differential term
 in the controller. It can also be seen that initially the error is reduced quickly (caused
-by the proportional term), but then the equalibrium is reqched slowly - this is caused
+by the proportional term), but then the equalibrium is reached slowly - this is caused
 by the slow buildup of the integral term. Increasing the integral term further could
-reduce this time, but could also cause instability is more dynamic scenarios.
+reduce this time, but could also cause instability in more dynamic scenarios.
 
 ![Throttle data - constant speed reference](plots/throttle_data_constant_speed_ref.png)
 
 As a comparison the following figure shows the same scenario when the error input to
 the controller was just the speed difference between the current state and the final
 waypoint (not the acceleration). This shows a continuous osciallation and the controller 
-behaving as a bang-bankg controller, despite using parameter search in this case as well.
+behaving as a bang-bang controller, despite using parameter search in this case as well.
 This method was not used later.
 
 ![Throttle data on velocity control - constant speed reference](plots/throttle_data_constant_speed_ref_velocity_control.png)
@@ -150,7 +150,7 @@ it also means that braking is not properly tested.
 ![Throttle data - planned](plots/throttle_data_planned.png)
 
 The final figure shows the steering controller error and output in case of a scene 
-with obstacles. There are three part of the timeline where the error got really large,
+with obstacles. There are three parts of the timeline where the error got really large,
 these are the 3 moments when the vehicle was passing by obstacles and had to perform
 lane changes. It can be seen from the error curve that the steering controller is also
 affected by oscillation, so probably further tweaking of the derivative parameter
